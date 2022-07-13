@@ -1,0 +1,177 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+// Printlist diye liste oluşturucaz. Printlist ve PrintWarnı buradan çalıştırıcaz
+// Şu an işlem yaptıktan sonra satır okuyoruz. Yapmamız gereken satırı okurken işlem yapmak
+public class Main extends Functions{
+    public static void main(String[] args)  {
+        FileWriter fileWriter = null;
+        try{
+            fileWriter = new FileWriter("monitoring.txt");
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        PrintWriter printWriter= new PrintWriter(fileWriter);
+        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<ArrayList<String>> commands = new ArrayList<>();
+        for (String s :readFile("command.txt") ){
+            lines.add(s);
+        }//Read command.txt
+        for(String s: lines){
+            if (s.startsWith("print")){
+                ArrayList<String> command = new ArrayList<String>();
+                command.add(s);
+                commands.add(command);
+            }
+
+            else{
+                ArrayList<String> command3 = new ArrayList<String>();
+                command3.add(s.substring(0,5));
+                command3.add(s.substring(6,10));
+                command3.add(s.substring(11,s.length()));
+                commands.add(command3);
+            }
+        } // Add commands to an arraylist
+
+        Data people = new Data("people.txt",6);// Create people object
+        Data food = new Data("food.txt",3);// Create food object
+        Data sport = new Data("Sport.txt",3);// Create sport object
+
+        ArrayList<ArrayList<String>> calories = new ArrayList<>();
+        ArrayList<ArrayList<String>> personalCaloriesTemporary = new ArrayList<>();
+        ArrayList<ArrayList<String>> personalCalories = new ArrayList<>();
+        ArrayList<ArrayList<String>> informations = new ArrayList<>();
+
+        for(int n = 0;n<commands.size();n++){
+            ArrayList<String> holder = new ArrayList<>();
+            if(commands.get(n).size() == 3) {// It adds calories to the ID's
+                if (commands.get(n).get(1).startsWith("1")){
+                    int calTaken = Integer.parseInt(food.getdataVariables().get(food.getdataID().indexOf(commands.get(n).get(1))).get(1))* Integer.parseInt(commands.get(n).get(2));
+                    printWriter.println( commands.get(n).get(0)+"\t"+"has"+"\t"+"taken"+"\t"+  calTaken +"kcal"+"\t" + "taken"+"\t"+"from"+"\t"+food.getdataVariables().get(food.getdataID().indexOf(commands.get(n).get(1))).get(0));
+                    holder.add(commands.get(n).get(0));
+                    holder.add(String.valueOf(calTaken));
+
+                }
+                else if(commands.get(n).get(1).startsWith("2")){
+                    int calBurned = (int) (Integer.parseInt(sport.getdataVariables().get(sport.getdataID().indexOf(commands.get(n).get(1))).get(1))* (Double.parseDouble (commands.get(n).get(2))/60)) ;
+                    printWriter.println(commands.get(n).get(0)+"\t"+"has"+"\t"+"burned"+"\t"+  calBurned +"kcal"+"\t" + "thanks"+"\t"+"to"+"\t"+ sport.getdataVariables().get(sport.getdataID().indexOf(commands.get(n).get(1))).get(0));
+                    holder.add(commands.get(n).get(0));
+                    holder.add("-"+calBurned);
+                }
+                calories.add(holder);
+            }
+            for(int i = 0 ;i< calories.size();i++){
+                ArrayList<String> totalCal= new ArrayList<String>();
+                int plusCalory = 0;
+                int negClory = 0;
+                for(int j = 0;j<calories.size();j++){
+                    if(calories.get(i).get(0).equals(calories.get(j).get(0))){
+                        if(calories.get(j).get(1).startsWith("-")) {
+                            negClory-=Integer.parseInt(calories.get(j).get(1));
+                        }
+                        else {
+                            plusCalory += Integer.parseInt(calories.get(j).get(1));
+                        }
+                    }
+                }
+                totalCal.add(calories.get(i).get(0));
+                totalCal.add(String.valueOf(plusCalory));
+                totalCal.add(String.valueOf(negClory));
+                personalCaloriesTemporary.add(totalCal);
+
+            }// It brings together all calorys of same element
+            for (ArrayList<String> e  : personalCaloriesTemporary) {
+                if (!personalCalories.contains(e)) {
+                    personalCalories.add(e);
+                }
+            }//It deletes same elements from list
+
+            if(!personalCalories.isEmpty()){
+                ArrayList<ArrayList<String>> IDHolder = new ArrayList<>();
+                ArrayList<String> valueHolder = new ArrayList<>();
+
+                String pID = commands.get(n).get(0);
+
+                for(int i = 0;i<personalCalories.size();i++){
+                    if(personalCalories.get(i).get(0).equals(pID)){
+                        IDHolder.add(personalCalories.get(i));
+                    }
+                }
+                if(!IDHolder.isEmpty()){
+
+                    List<String> place = people.getdataVariables().get(people.getdataID().indexOf(IDHolder.get(IDHolder.size()-1).get(0)));
+                    int DailyCal =0;
+                    int age = 2022 - Integer.parseInt(place.get(4));
+                    String gender = place.get(1);
+                    if(gender.equals("male")){
+                        DailyCal =maleCalculation(Integer.parseInt(place.get(2)),Integer.parseInt(place.get(3)), age);
+                    }
+                    else if (gender.equals("female")){
+                        DailyCal =femaleCalculation(Integer.parseInt(place.get(2)),Integer.parseInt(place.get(3)), age);
+
+                    }
+                    //( place.get(0) +"\t"+ (2022-Integer.parseInt(place.get(4))) +"\t"+ DailyCal+"kcal"+"\t"+ IDHolder.get(IDHolder.size()-1).get(1)+"kcal"+"\t"+ IDHolder.get(IDHolder.size()-1).get(2)+"kcal"+"\t"+(Integer.parseInt(IDHolder.get(IDHolder.size()-1).get(1))-DailyCal)+"kcal");
+
+                    valueHolder.add(place.get(0));
+                    valueHolder.add(String.valueOf(2022-Integer.parseInt(place.get(4))));
+                    valueHolder.add(String.valueOf(DailyCal));
+                    valueHolder.add(IDHolder.get(IDHolder.size()-1).get(1));
+                    valueHolder.add(IDHolder.get(IDHolder.size()-1).get(2));
+                    valueHolder.add(String.valueOf(Integer.parseInt(IDHolder.get(IDHolder.size()-1).get(1))-DailyCal));
+                    for(int j = 0 ; j<informations.size();j++){
+                        if (informations.get(j).get(0).equals(place.get(0))){
+                            informations.remove(informations.get(j));
+
+                        }
+                    }
+                    informations.add(valueHolder);
+
+
+
+                }
+
+            }
+            if(commands.get(n).size() == 3);// It provides to continuity of condition situations
+            else if(commands.get(n).get(0).equals("printList")){
+                for(int i =0 ;i <informations.size();i++){
+                    printWriter.print(informations.get(i).get(0)+"\t"+informations.get(i).get(1)+"\t"+informations.get(i).get(2)+"kcal"+"\t"+informations.get(i).get(3)+"kcal"+"\t"+informations.get(i).get(4)+"kcal"+"\t"+informations.get(i).get(5)+"kcal");
+                    printWriter.println();
+                }
+            }
+            else if(commands.get(n).get(0).equals("printWarn")){
+                boolean control = false;
+                for(int i =0 ;i <informations.size();i++){
+                    if(!informations.get(i).get(5).startsWith("-")){
+                        printWriter.print(informations.get(i).get(0) + "\t" + informations.get(i).get(1) + "\t" + informations.get(i).get(2)+"kcal" + "\t" + informations.get(i).get(3)+"kcal" + "\t" + informations.get(i).get(4)+"kcal" + "\t" + informations.get(i).get(5)+"kcal" + "\t");
+                        printWriter.println();
+                        control = true;
+                    }
+                }
+                if(!control){
+                    printWriter.println("there is no such person");
+                }
+            }
+            else if(commands.get(n).get(0).startsWith("print(") ){
+
+                String pID = commands.get(n).get(0).substring(6,11);
+                List<String> pVariable = people.getdataVariables().get(people.getdataID().indexOf(pID));
+                List<ArrayList<String>> pCals = new ArrayList<>();
+                for(int i = 0 ; i<informations.size();i++) {
+                    if (informations.get(i).get(0).equals(pVariable.get(0))) {
+                        pCals.add(informations.get(i));
+                    }
+                }
+                printWriter.println(pVariable.get(0) + "\t" + (2022-Integer.parseInt(pVariable.get(4))) + "\t" + pCals.get(0).get(2)+"kcal"+"\t"+pCals.get(0).get(3)+"kcal"+"\t"+pCals.get(0).get(4)+"kcal"+"\t"+pCals.get(0).get(5)+"kcal");
+
+            }
+
+            printWriter.println("***************");
+        }
+        printWriter.flush();
+        printWriter.close();
+    }
+}

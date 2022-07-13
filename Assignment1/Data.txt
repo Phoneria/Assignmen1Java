@@ -1,0 +1,52 @@
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Data extends Functions{
+    private ArrayList<List<String>>  dataList ;
+    private ArrayList<List<String>> dataVariables;
+    private ArrayList<String> dataID;
+
+    public Data(String file , int numOfVariable) {
+        this.dataList = collectAll(file,numOfVariable);;
+        this.dataVariables =  new ArrayList<List<String>>();;
+        this.dataID = new ArrayList<String>();
+
+
+        for(int i = 0;i< dataList.size();i++) {
+            if (i % 2 != 0) {
+                dataVariables.add(dataList.get(i));
+
+
+            } else {
+                dataID.add(dataList.get(i).get(0));
+            }
+        }
+    }
+
+    public ArrayList<List<String>> getdataList() {
+        return dataList;
+    }
+
+    public void setdataList(ArrayList<List<String>> dataList) {
+        this.dataList = dataList;
+    }
+
+    public ArrayList<List<String>> getdataVariables() {
+        return dataVariables;
+    }
+
+    public void setdataVariables(ArrayList<List<String>> peopeleVariables) {
+        this.dataVariables = peopeleVariables;
+    }
+
+    public ArrayList<String> getdataID() {
+        return dataID;
+    }
+
+    public void setdataID(ArrayList<String> dataeID) {
+        this.dataID = dataID;
+    }
+}
+

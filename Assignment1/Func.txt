@@ -1,0 +1,83 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+
+public class Functions {
+    public static String[] readFile (String path) {
+        try {
+            int i = 0;
+            int length = Files.readAllLines(Paths.get(path)).size();
+
+            String[] results = new String[length];
+            for (String line : Files.readAllLines(Paths.get(path))){
+                results[i++] = line;
+            }
+            return results;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }// Read files
+    public static ArrayList<List<String>> collectAll(String path, int n){
+        ArrayList<List<String>> peopleDictionary = new ArrayList<List<String>>();
+        ArrayList<String> peopleList = new ArrayList<String>();
+        String[] people = readFile(path);
+        ArrayList<String>  variableList = new ArrayList<>();
+        ArrayList<String>  IDList = new ArrayList<>();// It holds ID's
+        ArrayList<String>  dataList = new ArrayList<>();
+        ArrayList<List<String>> variableGroup = new ArrayList<>();// It holds variables of ID
+
+
+        for(String s: people){
+            peopleList.add(s);
+        }//Add elements of people array to peoplist Arraylist
+        for( String s :peopleList){
+            String[] eachPeople = s.split("\t");
+            for( String j : eachPeople){
+                dataList.add(j);
+            }
+
+        }// Delete tabs from arraylist
+        for(int i = 0; i < dataList.size();i++){
+            if ( i%n == 0) {
+                IDList.add(dataList.get(i));
+            }
+            else {
+                variableList.add(dataList.get(i));
+            }
+        }// Take ID's and variables in couple Arraylist
+        for(int i = 0;i<variableList.size()/(n-1);i++){
+
+            variableGroup.add(variableList.subList((n-1)*i,(n-1)*(i+1)));
+
+        }// Take variables in matrix
+        for(int i = 0; i< IDList.size(); i++){
+            peopleDictionary.add(Collections.singletonList(IDList.get(i)));
+            peopleDictionary.add(variableGroup.get(i));
+        }
+        return peopleDictionary;
+    }// Enter name of file and how many variables in each line.
+    public static int maleCalculation(int weight , int height, int age){
+        return Math.toIntExact(Math.round(66 + (13.75 * weight) + (5 * height) - (6.8 * age)));
+    }
+    public static int femaleCalculation(int weight , int height, int age){
+        return Math.toIntExact(Math.round(665 + (9.6 * weight) + (1.7 * height) - (4.7 * age)));
+    }
+    public static ArrayList<ArrayList<String>> printWarn(ArrayList<ArrayList<String>> calory , ArrayList<ArrayList<String>> totalCalPeople){
+        for(int i = 0; i<calory.size();i++){
+            if ( (Integer.parseInt(calory.get(i).get(1)) - Integer.parseInt(calory.get(i).get(2))) > Integer.parseInt(calory.get(i).get(3)) ){
+                totalCalPeople.add(calory.get(i));
+            }
+        }
+        return totalCalPeople;
+    }
+
+
+
+
+
+}

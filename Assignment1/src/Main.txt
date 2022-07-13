@@ -1,0 +1,207 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+    public static String[] readFile (String path) {
+        try {
+            int i = 0;
+            int length = Files.readAllLines(Paths.get(path)).size();
+
+            String[] results = new String[length];
+            for (String line : Files.readAllLines(Paths.get(path))){
+                results[i++] = line;
+            }
+            return results;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }// Read files
+    public static int maleCalculation(int weight , int height, int age){
+        return Math.toIntExact(Math.round(66 + (13.75 * weight) + (5 * height) - (6.8 * age)));
+    } // Calculating daily need male calories
+    public static int femaleCalculation(int weight , int height, int age){
+        return Math.toIntExact(Math.round(665 + (9.6 * weight) + (1.7 * height) - (4.7 * age)));
+    }// Calculating daily need female calories
+    public static void main(String[] args)  {
+        FileWriter fileWriter = null;
+        try{
+            fileWriter = new FileWriter("monitoring.txt");
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }// Writing outputs to the monitoring.txt
+        PrintWriter printWriter= new PrintWriter(fileWriter); // Writing outputs to the monitoring.txt
+        ArrayList<String> lines = new ArrayList<String>();// This arrayList holds commands
+        ArrayList<ArrayList<String>> commands = new ArrayList<>();// This arrayList holds commands according to it's order
+        for (String s :readFile(args[0]) ){
+            lines.add(s);
+        }//Read command.txt
+        for(String s: lines){
+            if (s.startsWith("print")){
+                ArrayList<String> command = new ArrayList<String>();
+                command.add(s);
+                commands.add(command);
+            }
+
+            else{
+                ArrayList<String> command3 = new ArrayList<String>();
+                command3.add(s.substring(0,5));
+                command3.add(s.substring(6,10));
+                command3.add(s.substring(11,s.length()));
+                commands.add(command3);
+            }
+        } // Seperate commands according to its orders and add them into the commands arraylist
+
+
+        Data people = new Data("people.txt",6);// Create people object
+        Data food = new Data("food.txt",3);// Create food object
+        Data sport = new Data("sport.txt",3);// Create sport object
+
+        ArrayList<ArrayList<String>> calories = new ArrayList<>();// It holds ID's and their calories that taken and burned from command.txt
+        ArrayList<ArrayList<String>> personalCaloriesTemporary = new ArrayList<>();// This gets taken and burned calories in the same arraylist
+        ArrayList<ArrayList<String>> personalCalories = new ArrayList<>();// This sums same ID's calories in common arraylist
+        ArrayList<ArrayList<String>> informations = new ArrayList<>();// It holds every information about people
+
+        for(int n = 0;n<commands.size();n++){
+            ArrayList<String> holder = new ArrayList<>();
+            if(commands.get(n).size() == 3) {
+                if (commands.get(n).get(1).startsWith("1")){
+                    int calTaken = Integer.parseInt(food.getdataVariables().get(food.getdataID().indexOf(commands.get(n).get(1))).get(1))* Integer.parseInt(commands.get(n).get(2));
+                    printWriter.println( commands.get(n).get(0)+"\t"+"has"+"\t"+"taken"+"\t"+  calTaken +"kcal"+"\t"+"from"+"\t"+food.getdataVariables().get(food.getdataID().indexOf(commands.get(n).get(1))).get(0));
+                    holder.add(commands.get(n).get(0));
+                    holder.add(String.valueOf(calTaken));
+
+                }
+                else if(commands.get(n).get(1).startsWith("2")){
+                    int calBurned = (int) (Integer.parseInt(sport.getdataVariables().get(sport.getdataID().indexOf(commands.get(n).get(1))).get(1))* (Double.parseDouble (commands.get(n).get(2))/60)) ;
+                    printWriter.println(commands.get(n).get(0)+"\t"+"has"+"\t"+"burned"+"\t"+  calBurned +"kcal"+"\t" + "thanks"+"\t"+"to"+"\t"+ sport.getdataVariables().get(sport.getdataID().indexOf(commands.get(n).get(1))).get(0));
+                    holder.add(commands.get(n).get(0));
+                    holder.add("-"+calBurned);
+                }
+                calories.add(holder);
+            }// It adds calories to the ID's
+            for(int i = 0 ;i< calories.size();i++){
+                ArrayList<String> totalCal= new ArrayList<String>();
+                int plusCalory = 0;
+                int negClory = 0;
+                for(int j = 0;j<calories.size();j++){
+                    if(calories.get(i).get(0).equals(calories.get(j).get(0))){
+                        if(calories.get(j).get(1).startsWith("-")) {
+                            negClory-=Integer.parseInt(calories.get(j).get(1));
+                        }
+                        else {
+                            plusCalory += Integer.parseInt(calories.get(j).get(1));
+                        }
+                    }
+                }
+                totalCal.add(calories.get(i).get(0));
+                totalCal.add(String.valueOf(plusCalory));
+                totalCal.add(String.valueOf(negClory));
+                personalCaloriesTemporary.add(totalCal);
+
+            }// It brings together all calorys of same element
+            for (ArrayList<String> e  : personalCaloriesTemporary) {
+                if (!personalCalories.contains(e)) {
+                    personalCalories.add(e);
+                }
+            }//It deletes same elements from list
+
+            if(!personalCalories.isEmpty()){
+                ArrayList<ArrayList<String>> IDHolder = new ArrayList<>();
+                ArrayList<String> valueHolder = new ArrayList<>();
+
+                String pID = commands.get(n).get(0);
+
+                for(int i = 0;i<personalCalories.size();i++){
+                    if(personalCalories.get(i).get(0).equals(pID)){
+                        IDHolder.add(personalCalories.get(i));
+                    }
+                }
+                if(!IDHolder.isEmpty()){
+
+                    List<String> place = people.getdataVariables().get(people.getdataID().indexOf(IDHolder.get(IDHolder.size()-1).get(0)));
+
+                    int DailyCal =0;
+                    int age = 2022 - Integer.parseInt(place.get(4));
+                    String gender = place.get(1);
+                    if(gender.equals("male")){
+                        DailyCal =maleCalculation(Integer.parseInt(place.get(2)),Integer.parseInt(place.get(3)), age);
+                    }
+                    else if (gender.equals("female")){
+                        DailyCal =femaleCalculation(Integer.parseInt(place.get(2)),Integer.parseInt(place.get(3)), age);
+
+                    }
+
+                    valueHolder.add(place.get(0));
+                    valueHolder.add(String.valueOf(2022-Integer.parseInt(place.get(4))));
+                    valueHolder.add(String.valueOf(DailyCal));
+                    valueHolder.add(IDHolder.get(IDHolder.size()-1).get(1));
+                    valueHolder.add(IDHolder.get(IDHolder.size()-1).get(2));
+                    valueHolder.add(String.valueOf(Integer.parseInt(IDHolder.get(IDHolder.size()-1).get(1))-DailyCal-Integer.parseInt(IDHolder.get(IDHolder.size()-1).get(2))));
+                    boolean control = false;
+                    for(int j = 0 ; j<informations.size();j++){
+                        if (informations.get(j).get(0).equals(place.get(0))){
+                            informations.set(informations.indexOf(informations.get(j)),valueHolder);
+                            control= true;
+                        }
+                    }
+                    if (!control){
+                        informations.add(valueHolder);
+                    }
+                }
+            }
+            if(commands.get(n).size() == 3);// It provides to continuity of condition situations
+            else if(commands.get(n).get(0).equals("printList")){
+                for(int i =0 ;i <informations.size();i++){
+                    printWriter.print(informations.get(i).get(0)+"\t"+informations.get(i).get(1)+"\t"+informations.get(i).get(2)+"kcal"+"\t"+informations.get(i).get(3)+"kcal"+"\t"+informations.get(i).get(4)+"kcal"+"\t");
+                    if(informations.get(i).get(5).startsWith("-")){
+                        printWriter.print(informations.get(i).get(5)+"kcal");
+                    }
+                    else {
+                        printWriter.print("+"+informations.get(i).get(5)+"kcal");
+                    }
+                    printWriter.println();
+                }
+            }
+            else if(commands.get(n).get(0).equals("printWarn")){
+                boolean control = false;
+                for(int i =0 ;i <informations.size();i++){
+                    if(!informations.get(i).get(5).startsWith("-")){
+                        printWriter.print(informations.get(i).get(0) + "\t" + informations.get(i).get(1) + "\t" + informations.get(i).get(2)+"kcal" + "\t" + informations.get(i).get(3)+"kcal" + "\t" + informations.get(i).get(4)+"kcal" + "\t" + "+"+informations.get(i).get(5)+"kcal" + "\t");
+                        printWriter.println();
+                        control = true;
+                    }
+                }
+                if(!control){
+                    printWriter.println("there is no such person");
+                }
+            }
+            else if(commands.get(n).get(0).startsWith("print(") ){
+
+                String pID = commands.get(n).get(0).substring(6,11);
+                List<String> pVariable = people.getdataVariables().get(people.getdataID().indexOf(pID));
+                List<ArrayList<String>> pCals = new ArrayList<>();
+                for(int i = 0 ; i<informations.size();i++) {
+                    if (informations.get(i).get(0).equals(pVariable.get(0))) {
+                        pCals.add(informations.get(i));
+                    }
+                }
+                printWriter.println(pVariable.get(0) + "\t" + (2022-Integer.parseInt(pVariable.get(4))) + "\t" + pCals.get(0).get(2)+"kcal"+"\t"+pCals.get(0).get(3)+"kcal"+"\t"+pCals.get(0).get(4)+"kcal"+"\t"+pCals.get(0).get(5)+"kcal");
+
+            }
+            printWriter.println("***************");
+        } // It is our main line. This read commands, add people ID's and their data's to arraylists
+        // And then writes everything to the monitoring.txt
+
+        printWriter.flush();
+        printWriter.close();
+
+    }
+
+}
